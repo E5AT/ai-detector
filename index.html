@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" id="html-root">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Text Detector</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind Config -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .bg-glow { background: radial-gradient(ellipse 60% 40% at 20% 10%, rgba(99,102,241,0.15) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 80% 80%, rgba(139,92,246,0.1) 0%, transparent 60%); }
+      .progress-gradient-ai { background: linear-gradient(90deg, #ef4444, #f87171); }
+      .progress-gradient-human { background: linear-gradient(90deg, #22c55e, #4ade80); }
+      .progress-gradient-uncertain { background: linear-gradient(90deg, #eab308, #facc15); }
+    }
+  </style>
+</head>
+<body class="font-sans min-h-screen bg-gray-100 text-gray-900 transition-colors duration-300">
+  
+  <!-- Background glow -->
+  <div id="bg-glow" class="fixed inset-0 pointer-events-none z-0 opacity-0 transition-opacity duration-500 bg-glow"></div>
+  
+  <div class="relative z-10 min-h-screen flex flex-col">
+    
+    <!-- Header -->
+    <header class="pt-8 pb-4 px-4">
+      <div class="max-w-2xl mx-auto text-center">
+        <h1 class="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+          AI Text Detector
+        </h1>
+        <p class="text-gray-500 text-sm mb-4">
+          Detect if text was written by AI or a human
+        </p>
+        <!-- Dark Mode Toggle -->
+        <button id="theme-toggle" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-300 shadow-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all" title="Toggle theme">
+          <svg id="icon-moon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+          </svg>
+          <svg id="icon-sun" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+    
+    <!-- Main Card -->
+    <main class="flex-1 px-4 pb-8">
+      <div class="max-w-2xl mx-auto">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 p-6 sm:p-8">
+          
+          <!-- API Key Section -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Google AI Studio API Key
+            </label>
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                </div>
+                <input 
+                  type="password" 
+                  id="api-key-input"
+                  class="w-full pl-10 pr-10 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
+                  placeholder="Paste your API key here"
+                  autocomplete="off"
+                >
+                <button id="toggle-password" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="mt-2 flex items-center justify-between">
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-500 dark:hover:text-violet-300 transition-colors">
+                Get free key →
+              </a>
+              <span id="api-key-status" class="text-xs text-gray-500 dark:text-gray-400"></span>
+            </div>
+          </div>
+          
+          <!-- Text Input Section -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Paste your text below
+            </label>
+            <textarea 
+              id="text-input"
+              class="w-full min-h-48 p-4 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
+              placeholder="Paste any text to analyze whether it was written by AI or a human..."
+              spellcheck="false"
+            ></textarea>
+            <div class="mt-2 text-right">
+              <span id="char-count" class="text-xs text-gray-500 dark:text-gray-400">0 characters</span>
+            </div>
+          </div>
+          
+          <!-- Analyze Button -->
+          <button 
+            id="analyze-btn"
+            class="w-full py-3.5 px-6 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold rounded-lg transition-all duration-200 hover:brightness-110 hover:scale-[1.01] hover:shadow-lg hover:shadow-violet-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:brightness-100 flex items-center justify-center gap-2"
+            disabled
+          >
+            <span id="btn-text">Analyze Text</span>
+            <svg id="loading-spinner" class="w-5 h-5 animate-spin hidden" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+          
+          <!-- Error Message -->
+          <div id="error-message" class="hidden mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p id="error-text" class="text-sm text-red-500 dark:text-red-400"></p>
+          </div>
+          
+          <!-- Result Section -->
+          <div id="result-section" class="hidden mt-6">
+            <div class="border-t border-gray-300 dark:border-slate-600 pt-6">
+              
+              <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div>
+                  <span id="verdict-badge" class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-amber-500 text-white">
+                    Uncertain
+                  </span>
+                </div>
+                <div class="text-right">
+                  <div id="percentage" class="text-5xl font-extrabold text-amber-500">0%</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">probability of AI generation</div>
+                </div>
+              </div>
+              
+              <div class="mb-4">
+                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  <span>Confidence</span>
+                  <span id="confidence-label">0%</span>
+                </div>
+                <div class="h-3 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div id="confidence-fill" class="h-full rounded-full transition-all duration-1000 ease-out progress-gradient-uncertain" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                  <span>Human</span>
+                  <span>Uncertain</span>
+                  <span>AI</span>
+                </div>
+              </div>
+              
+              <div class="mb-4 p-4 bg-gray-50 dark:bg-slate-800 rounded-xl">
+                <p id="explanation" class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  Explanation will appear here...
+                </p>
+              </div>
+              
+              <div class="flex gap-3">
+                <button id="copy-btn" class="flex-1 py-2.5 px-4 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                  </svg>
+                  <span id="copy-text">Copy Result</span>
+                </button>
+                <button id="clear-btn" class="py-2.5 px-4 text-gray-500 dark:text-gray-400 text-sm font-medium hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                  Clear
+                </button>
+              </div>
+              
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </main>
+    
+    <footer class="py-6 text-center">
+      <p class="text-xs text-gray-500 dark:text-gray-400">
+        Powered by Gemini 2.5 Flash · Free API · No data stored
+      </p>
+    </footer>
+    
+  </div>
+  
+  <script src="app.js" defer></script>
+</body>
+</html>
